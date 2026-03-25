@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentence Builder (Adjectives) 🦋</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff9f0;
+    --primary: #ff7043;
+    --secondary: #42a5f5;
+    --accent: #ffca28;
+    --green: #66bb6a;
+    --purple: #ab47bc;
+    --pink: #ec407a;
+    --text: #2c2c2c;
+    --muted: #999;
+    --card: #ffffff;
+    --border: #f0e0d0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  .bg-blobs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.18; animation: floatBlob 12s ease-in-out infinite; }
+  .blob1 { width: 400px; height: 400px; background: #ff7043; top: -100px; left: -100px; }
+  .blob2 { width: 350px; height: 350px; background: #42a5f5; bottom: -80px; right: -80px; animation-delay: -4s; }
+  .blob3 { width: 300px; height: 300px; background: #ab47bc; top: 40%; left: 60%; animation-delay: -8s; }
+  @keyframes floatBlob { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(30px,-20px) scale(1.05)} 66%{transform:translate(-20px,15px) scale(0.97)} }
+
+  /* ── SCREENS ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── NAME SCREEN ── */
+  .name-screen {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .name-card {
+    background: var(--card);
+    border-radius: 28px;
+    padding: 48px 40px;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.1);
+    border: 2px solid var(--border);
+    text-align: center;
+    max-width: 440px;
+    width: 100%;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .name-emoji { font-size: 4rem; margin-bottom: 12px; display: block; animation: flutter 2s ease-in-out infinite; }
+  .name-title { font-family: 'Fredoka One', cursive; font-size: 2rem; color: var(--primary); margin-bottom: 6px; }
+  .name-sub { color: var(--muted); font-size: 0.95rem; font-weight: 600; margin-bottom: 28px; }
+
+  .name-input {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 2.5px solid var(--border);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    background: #fafafa;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .name-input:focus { border-color: var(--primary); background: #fff; }
+  .name-input::placeholder { color: #ccc; font-weight: 600; }
+
+  .teacher-link {
+    display: block;
+    margin-top: 16px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s;
+  }
+  .teacher-link:hover { color: var(--primary); }
+
+  /* ── GAME SCREEN ── */
+  .app { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 24px 20px 80px; }
+
+  header { text-align: center; margin-bottom: 28px; }
+  .title {
+    font-family: 'Fredoka One', cursive; font-size: 2.4rem; color: var(--primary);
+    display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px;
+  }
+  .butterfly-icon { font-size: 2.6rem; animation: flutter 2s ease-in-out infinite; }
+  @keyframes flutter { 0%,100%{transform:rotate(-8deg) scale(1)} 50%{transform:rotate(8deg) scale(1.1)} }
+  .subtitle { font-size: 0.95rem; color: var(--muted); font-weight: 600; }
+
+  .student-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); color: var(--text);
+    padding: 6px 18px; border-radius: 20px;
+    font-family: 'Fredoka One', cursive; font-size: 1rem;
+    margin-top: 8px;
+  }
+
+  /* Progress */
+  .progress-section {
+    background: var(--card); border-radius: 20px; padding: 18px 22px;
+    margin-bottom: 22px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); border: 2px solid var(--border);
+  }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .progress-title { font-family: 'Fredoka One', cursive; font-size: 1.05rem; }
+  .stats-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .stat-chip { display: flex; align-items: center; gap: 5px; font-size: 0.83rem; font-weight: 700; padding: 5px 11px; border-radius: 20px; }
+  .stat-chip.correct { background: #e8f5e9; color: #388e3c; }
+  .stat-chip.attempts { background: #e3f2fd; color: #1565c0; }
+  .stat-chip.stars { background: #fff8e1; color: #f57f17; }
+  .stat-chip.timer { background: #f3e5f5; color: #6a1b9a; }
+
+  .sentence-progress { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
+  .sentence-pill {
+    display: flex; align-items: center; gap: 4px;
+    padding: 6px 12px; border-radius: 30px; font-size: 0.78rem; font-weight: 700;
+    border: 2px solid transparent; transition: all 0.2s;
+  }
+  .sentence-pill.locked { background: #f0f0f0; color: #bbb; border-color: #e0e0e0; cursor: not-allowed; }
+  .sentence-pill.available { background: #fff3e0; color: var(--primary); border-color: #ffcc80; cursor: pointer; }
+  .sentence-pill.available:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,112,67,0.2); }
+  .sentence-pill.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 14px rgba(255,112,67,0.35); }
+  .sentence-pill.done { background: #e8f5e9; color: #388e3c; border-color: #a5d6a7; cursor: pointer; }
+  .sentence-pill.done:hover { transform: translateY(-2px); }
+  .pill-num { font-family: 'Fredoka One', cursive; font-size: 0.9rem; }
+
+  .progress-bar-wrap { background: #f0f0f0; border-radius: 10px; height: 9px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), #42a5f5); border-radius: 10px; transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+
+  /* Game Card */
+  .game-card {
+    background: var(--card); border-radius: 24px; padding: 30px 26px;
+    box-shadow: 0 6px 32px rgba(0,0,0,0.09); border: 2px solid var(--border);
+    min-height: 300px; position: relative; overflow: hidden;
+  }
+  .game-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary), var(--purple));
+    border-radius: 24px 24px 0 0;
+  }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 240px; gap: 10px; color: var(--muted); }
+  .empty-state .big-emoji { font-size: 3.5rem; animation: flutter 2s ease-in-out infinite; }
+  .empty-state p { font-size: 1rem; font-weight: 700; }
+  .empty-state small { font-size: 0.85rem; }
+
+  .q-label { font-family: 'Fredoka One', cursive; font-size: 0.88rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .q-number { background: var(--primary); color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; }
+  .instruction { font-size: 0.9rem; color: var(--muted); margin-bottom: 18px; font-weight: 600; }
+
+  .drop-zone {
+    min-height: 60px; border: 2.5px dashed #d0d0d0; border-radius: 16px;
+    padding: 10px 12px; margin-bottom: 18px; display: flex; flex-wrap: wrap;
+    gap: 8px; align-items: center; transition: all 0.2s; background: #fafafa; position: relative;
+  }
+  .drop-zone.drag-over { border-color: var(--secondary); background: #e3f2fd; }
+  .drop-zone.correct-zone { border-color: var(--green); background: #f1fff4; animation: correctPulse 0.5s ease; }
+  .drop-zone.wrong-zone { border-color: var(--pink); background: #fff0f3; animation: shake 0.4s ease; }
+  @keyframes correctPulse { 0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)} }
+  @keyframes shake { 0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)} }
+  .drop-placeholder { color: #ccc; font-size: 0.88rem; font-weight: 600; position: absolute; left: 16px; pointer-events: none; }
+
+  .word-tile {
+    padding: 9px 15px; border-radius: 11px; font-size: 0.98rem; font-weight: 800;
+    cursor: grab; user-select: none; transition: all 0.15s; border: 2px solid transparent; touch-action: none;
+  }
+  .word-tile.punct-tile { padding: 9px 12px; font-size: 1.1rem; min-width: 36px; text-align: center; }
+  .word-tile:active { cursor: grabbing; transform: scale(0.95); }
+  .word-tile.dragging { opacity: 0.4; }
+  .word-tile:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+
+  .tile-0 { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
+  .tile-1 { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+  .tile-2 { background: #f3e5f5; color: #6a1b9a; border-color: #ce93d8; }
+  .tile-3 { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+  .tile-4 { background: #fce4ec; color: #880e4f; border-color: #f48fb1; }
+  .tile-5 { background: #e8eaf6; color: #283593; border-color: #9fa8da; }
+  .tile-6 { background: #fff8e1; color: #f57f17; border-color: #ffe082; }
+  .tile-7 { background: #e0f7fa; color: #006064; border-color: #80deea; }
+  .tile-punct { background: #fdf2f8; color: #9c27b0; border-color: #e1bee7; }
+
+  .word-bank-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .word-bank { display: flex; flex-wrap: wrap; gap: 8px; min-height: 50px; padding: 10px; background: #f7f7f7; border-radius: 13px; border: 2px solid #eee; margin-bottom: 20px; }
+
+  .feedback { text-align: center; padding: 11px; border-radius: 13px; font-weight: 800; font-size: 0.97rem; margin-bottom: 14px; display: none; animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+  .feedback.correct { background: #e8f5e9; color: #2e7d32; display: block; }
+  .feedback.wrong { background: #fce4ec; color: #c62828; display: block; }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .btn { padding: 11px 26px; border-radius: 30px; border: none; font-family: 'Nunito', sans-serif; font-size: 0.93rem; font-weight: 800; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+  .btn:hover { transform: translateY(-2px); }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 16px rgba(255,112,67,0.35); }
+  .btn-secondary { background: #f0f0f0; color: #555; }
+  .btn-check { background: var(--green); color: white; box-shadow: 0 4px 16px rgba(102,187,106,0.35); }
+  .btn-teacher { background: var(--purple); color: white; box-shadow: 0 4px 16px rgba(171,75,188,0.3); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* Completion */
+  .completion-banner { display: none; text-align: center; padding: 28px 16px; animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+  .completion-banner.show { display: block; }
+  .completion-emoji { font-size: 4rem; margin-bottom: 10px; animation: flutter 1.5s ease-in-out infinite; }
+  .completion-title { font-family: 'Fredoka One', cursive; font-size: 1.8rem; color: var(--primary); margin-bottom: 6px; }
+  .completion-sub { font-size: 0.9rem; color: var(--muted); font-weight: 600; margin-bottom: 18px; }
+  .final-score { display: inline-flex; align-items: center; gap: 10px; background: var(--accent); padding: 11px 26px; border-radius: 30px; font-family: 'Fredoka One', cursive; font-size: 1.2rem; color: var(--text); margin-bottom: 18px; }
+
+  .results-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 0.85rem; text-align: left; }
+  .results-table th { background: #fff3e0; padding: 8px 10px; font-family: 'Fredoka One', cursive; color: var(--primary); }
+  .results-table td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; font-weight: 700; }
+  .results-table tr:last-child td { border-bottom: none; }
+
+  /* ── TEACHER SCREEN ── */
+  .teacher-screen { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 30px 20px 60px; }
+
+  .teacher-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+  }
+  .teacher-title { font-family: 'Fredoka One', cursive; font-size: 2rem; color: var(--purple); display: flex; align-items: center; gap: 10px; }
+
+  .teacher-card {
+    background: var(--card); border-radius: 20px; padding: 24px 22px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08); border: 2px solid #e8e0f0;
+    margin-bottom: 20px; overflow-x: auto;
+  }
+  .teacher-card-title { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--purple); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  .teacher-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 600px; }
+  .teacher-table th { background: #f3e5f5; padding: 10px 12px; font-family: 'Fredoka One', cursive; color: var(--purple); text-align: left; white-space: nowrap; }
+  .teacher-table td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; font-weight: 700; vertical-align: middle; }
+  .teacher-table tr:last-child td { border-bottom: none; }
+  .teacher-table tr:hover td { background: #fdf6ff; }
+
+  .badge-done { background: #e8f5e9; color: #388e3c; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; }
+  .badge-pending { background: #fff3e0; color: #e65100; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; }
+
+  .no-data { text-align: center; padding: 48px; color: var(--muted); font-size: 1rem; font-weight: 700; }
+  .no-data .nd-emoji { font-size: 3rem; margin-bottom: 10px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .summary-card { background: var(--card); border-radius: 16px; padding: 18px; text-align: center; box-shadow: 0 3px 16px rgba(0,0,0,0.07); border: 2px solid var(--border); }
+  .summary-card .s-val { font-family: 'Fredoka One', cursive; font-size: 2rem; color: var(--primary); }
+  .summary-card .s-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); margin-top: 2px; }
+
+  .password-overlay {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 20px; position: relative; z-index: 1;
+  }
+  .password-card {
+    background: var(--card); border-radius: 24px; padding: 44px 36px;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.1); border: 2px solid #e8e0f0;
+    text-align: center; max-width: 380px; width: 100%;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .password-card .lock-emoji { font-size: 3.5rem; margin-bottom: 10px; }
+  .password-card h2 { font-family: 'Fredoka One', cursive; font-size: 1.6rem; color: var(--purple); margin-bottom: 6px; }
+  .password-card p { font-size: 0.88rem; color: var(--muted); font-weight: 600; margin-bottom: 22px; }
+  .pass-input {
+    width: 100%; padding: 12px 16px; border-radius: 12px; border: 2.5px solid var(--border);
+    font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700;
+    text-align: center; outline: none; transition: border-color 0.2s; margin-bottom: 12px; letter-spacing: 4px;
+  }
+  .pass-input:focus { border-color: var(--purple); }
+  .pass-error { color: var(--pink); font-size: 0.85rem; font-weight: 700; margin-bottom: 12px; display: none; }
+
+  /* Effects */
+  @keyframes popIn { 0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1} }
+  .floater { position: fixed; pointer-events: none; font-size: 1.5rem; animation: rise 2.5s ease-out forwards; z-index: 999; }
+  @keyframes rise { 0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(-200px) rotate(30deg);opacity:0} }
+  .confetti-particle { position: fixed; border-radius: 2px; pointer-events: none; z-index: 9999; animation: confettiFall linear forwards; }
+  @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+
+  @media (max-width: 520px) {
+    .title { font-size: 1.8rem; }
+    .game-card { padding: 20px 14px; }
+    .word-tile { font-size: 0.88rem; padding: 8px 11px; }
+    .name-card { padding: 32px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-blobs">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+</div>
+
+<!-- ══ SCREEN 1: NAME ENTRY ══ -->
+<div id="screen-name" class="screen active">
+  <div class="name-screen">
+    <div class="name-card">
+      <span class="name-emoji">🦋</span>
+      <div class="name-title">Sentence Builder!</div>
+      <div class="name-sub">Adjectives 🌟 What's your name? Let's get started!</div>
+      <input class="name-input" id="name-input" type="text" placeholder="Type your name here..." maxlength="30" autocomplete="off" />
+      <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;" onclick="startGame()">Let's Go! 🚀</button>
+      <span class="teacher-link" onclick="showTeacherLogin()">🔒 Teacher View</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 2: GAME ══ -->
+<div id="screen-game" class="screen">
+  <div class="app">
+    <header>
+      <div class="title">
+        <span class="butterfly-icon">🦋</span>
+        Sentence Builder (Adjectives)
+        <span class="butterfly-icon" style="animation-delay:-1s">🦋</span>
+      </div>
+      <div class="subtitle">Arrange the words to make a sentence!</div>
+      <div class="student-badge">👤 <span id="student-name-display"></span></div>
+    </header>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <div class="progress-title">📊 My Progress</div>
+        <div class="stats-row">
+          <div class="stat-chip correct" id="stat-correct">✅ 0 correct</div>
+          <div class="stat-chip attempts" id="stat-attempts">🔄 0 tries</div>
+          <div class="stat-chip stars" id="stat-stars">⭐ 0 stars</div>
+          <div class="stat-chip timer" id="stat-timer">⏱ 0:00</div>
+        </div>
+      </div>
+      <div class="sentence-progress" id="sentence-pills"></div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="game-card">
+      <div class="empty-state" id="empty-state">
+        <div class="big-emoji">🦋</div>
+        <p>Pick a sentence to start!</p>
+        <small>Tap a button above 👆</small>
+      </div>
+
+      <div id="game-area" style="display:none;">
+        <div class="q-label">
+          <div class="q-number" id="q-number">1</div>
+          Sentence
+        </div>
+        <div class="instruction">Drag or tap the words and full stop into the correct order 👇</div>
+        <div class="drop-zone" id="drop-zone">
+          <span class="drop-placeholder" id="drop-placeholder">Drop words here...</span>
+        </div>
+        <div class="word-bank-label">Word Bank</div>
+        <div class="word-bank" id="word-bank"></div>
+        <div class="feedback" id="feedback"></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="resetCurrent()">🔄 Reset</button>
+          <button class="btn btn-check" onclick="checkAnswer()" id="check-btn">✔ Check</button>
+        </div>
+      </div>
+
+      <div class="completion-banner" id="completion-banner">
+        <div class="completion-emoji">🎉</div>
+        <div class="completion-title">You did it!</div>
+        <div class="completion-sub">All 6 sentences complete! Here's your scorecard:</div>
+        <table class="results-table" id="results-table"></table>
+        <div class="final-score" id="final-score">⭐ 0 / 18 stars</div>
+        <div class="btn-row" style="justify-content:center;">
+          <button class="btn btn-primary" onclick="restartAll()">🔁 Play Again</button>
+          <button class="btn btn-teacher" onclick="showTeacherLogin()">📋 Teacher View</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 3: TEACHER LOGIN ══ -->
+<div id="screen-teacher-login" class="screen">
+  <div class="password-overlay">
+    <div class="password-card">
+      <div class="lock-emoji">🔒</div>
+      <h2>Teacher View</h2>
+      <p>Enter the teacher password to view student results.</p>
+      <input class="pass-input" id="pass-input" type="password" placeholder="••••" maxlength="20"
+        onkeydown="if(event.key==='Enter') checkPassword()" />
+      <div class="pass-error" id="pass-error">Incorrect password. Try again.</div>
+      <button class="btn btn-teacher" style="width:100%;justify-content:center;" onclick="checkPassword()">Unlock 🔓</button>
+      <br>
+      <button class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:8px;" onclick="goBack()">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN 4: TEACHER DASHBOARD ══ -->
+<div id="screen-teacher" class="screen">
+  <div class="teacher-screen">
+    <div class="teacher-header">
+      <div class="teacher-title">📋 Teacher View</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="clearResults()" style="font-size:0.82rem;padding:8px 16px;">🗑 Clear All Data</button>
+        <button class="btn btn-secondary" onclick="goBack()" style="font-size:0.82rem;padding:8px 16px;">← Back</button>
+      </div>
+    </div>
+
+    <div class="summary-grid" id="summary-grid"></div>
+
+    <div class="teacher-card">
+      <div class="teacher-card-title">👤 Student Results</div>
+      <div id="teacher-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ CONFIG ══
+const TEACHER_PASSWORD = 'teacher123';
+
+const SENTENCES = [
+  "I see a large caterpillar .",
+  "The small caterpillar is eating leaves .",
+  "The pupa is still .",
+  "The butterflies fly quickly .",
+  "The pretty butterflies are resting .",
+  "The colourful butterflies are drinking nectar ."
+];
+
+// ══ STATE ══
+let studentName = '';
+let gameState = null;
+let timerInterval = null;
+let sessionStart = null;
+
+// Stored results: array of student session objects
+function getResults() {
+  try { return JSON.parse(localStorage.getItem('wb_results') || '[]'); } catch { return []; }
+}
+function saveResults(arr) {
+  try { localStorage.setItem('wb_results', JSON.stringify(arr)); } catch {}
+}
+
+// ══ SCREENS ══
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goBack() {
+  if (gameState) showScreen('screen-game');
+  else showScreen('screen-name');
+  document.getElementById('pass-input').value = '';
+  document.getElementById('pass-error').style.display = 'none';
+}
+
+// ══ NAME SCREEN ══
+function startGame() {
+  const val = document.getElementById('name-input').value.trim();
+  if (!val) {
+    document.getElementById('name-input').focus();
+    document.getElementById('name-input').style.borderColor = 'var(--pink)';
+    setTimeout(() => document.getElementById('name-input').style.borderColor = '', 1200);
+    return;
+  }
+  studentName = val;
+  document.getElementById('student-name-display').textContent = studentName;
+  initGame();
+  showScreen('screen-game');
+}
+
+document.getElementById('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); });
+
+// ══ TEACHER LOGIN ══
+function showTeacherLogin() {
+  document.getElementById('pass-input').value = '';
+  document.getElementById('pass-error').style.display = 'none';
+  showScreen('screen-teacher-login');
+}
+
+function checkPassword() {
+  const val = document.getElementById('pass-input').value;
+  if (val === TEACHER_PASSWORD) {
+    document.getElementById('pass-error').style.display = 'none';
+    renderTeacherView();
+    showScreen('screen-teacher');
+  } else {
+    document.getElementById('pass-error').style.display = 'block';
+    document.getElementById('pass-input').value = '';
+  }
+}
+
+// ══ GAME INIT ══
+function initGame() {
+  stopTimer();
+  gameState = {
+    sentences: SENTENCES.map((s, i) => ({
+      id: i,
+      original: s,
+      tokens: s.split(' '),
+      status: i === 0 ? 'available' : 'locked',
+      stars: 0,
+      attempts: 0,
+      completed: false,
+      timeSeconds: 0,
+      sentenceStart: null,
+    })),
+    currentId: null,
+    dropWords: [],
+    bankWords: [],
+    totalAttempts: 0,
+    totalStars: 0,
+    totalCorrect: 0,
+    elapsedSeconds: 0,
+  };
+  sessionStart = Date.now();
+  startTimer();
+  renderPills();
+  updateStats();
+  showEmpty();
+}
+
+// ══ TIMER ══
+function startTimer() {
+  stopTimer();
+  timerInterval = setInterval(() => {
+    gameState.elapsedSeconds = Math.floor((Date.now() - sessionStart) / 1000);
+    document.getElementById('stat-timer').textContent = '⏱ ' + formatTime(gameState.elapsedSeconds);
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function formatTime(secs) {
+  const m = Math.floor(secs / 60), s = secs % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+// ══ EMPTY ══
+function showEmpty() {
+  document.getElementById('empty-state').style.display = 'flex';
+  document.getElementById('game-area').style.display = 'none';
+  document.getElementById('completion-banner').classList.remove('show');
+}
+
+// ══ PILLS ══
+function renderPills() {
+  const container = document.getElementById('sentence-pills');
+  container.innerHTML = '';
+  gameState.sentences.forEach(s => {
+    const pill = document.createElement('div');
+    const isActive = s.id === gameState.currentId && !s.completed;
+    const cls = isActive ? 'active' : s.status;
+    pill.className = `sentence-pill ${cls}`;
+    const icon = s.completed ? '✅' : s.status === 'locked' ? '🔒' : isActive ? '✏️' : '▶️';
+    pill.innerHTML = `<span class="pill-num">${s.id + 1}</span>${icon} S${s.id + 1}`;
+    if (s.status !== 'locked') pill.addEventListener('click', () => loadSentence(s.id));
+    container.appendChild(pill);
+  });
+}
+
+// ══ LOAD SENTENCE ══
+function loadSentence(id) {
+  const s = gameState.sentences[id];
+  gameState.currentId = id;
+  if (!s.sentenceStart) s.sentenceStart = Date.now();
+
+  gameState.dropWords = [];
+  // Tokenise: each word is separate; full stop is a separate token "."
+  const rawTokens = s.tokens; // already split including "."
+  gameState.bankWords = shuffle(rawTokens.map((w, i) => ({ id: i, word: w, display: w })));
+
+  document.getElementById('q-number').textContent = id + 1;
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('game-area').style.display = 'block';
+  document.getElementById('completion-banner').classList.remove('show');
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('check-btn').disabled = s.completed;
+
+  renderPills();
+  renderDropZone();
+  renderWordBank();
+  updateStats();
+}
+
+// ══ RENDER ══
+function renderDropZone() {
+  const dz = document.getElementById('drop-zone');
+  const ph = document.getElementById('drop-placeholder');
+  dz.className = 'drop-zone';
+  dz.innerHTML = '';
+  dz.appendChild(ph);
+  ph.style.display = gameState.dropWords.length ? 'none' : 'block';
+  gameState.dropWords.forEach((item, idx) => dz.appendChild(makeTile(item, 'drop', idx)));
+  dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag-over'); };
+  dz.ondragleave = () => dz.classList.remove('drag-over');
+  dz.ondrop = e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+    moveToZone(data.source, data.idx, 'drop');
+  };
+}
+
+function renderWordBank() {
+  const wb = document.getElementById('word-bank');
+  wb.innerHTML = '';
+  gameState.bankWords.forEach((item, idx) => wb.appendChild(makeTile(item, 'bank', idx)));
+  wb.ondragover = e => { e.preventDefault(); wb.style.background = '#eef'; };
+  wb.ondragleave = () => wb.style.background = '#f7f7f7';
+  wb.ondrop = e => {
+    e.preventDefault(); wb.style.background = '#f7f7f7';
+    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+    if (data.source === 'drop') moveToZone('drop', data.idx, 'bank');
+  };
+}
+
+function makeTile(item, source, idx) {
+  const tile = document.createElement('div');
+  const isPunct = item.word === '.';
+  if (isPunct) {
+    tile.className = `word-tile punct-tile tile-punct`;
+  } else {
+    tile.className = `word-tile tile-${item.id % 8}`;
+  }
+  tile.textContent = item.display;
+  tile.draggable = true;
+  tile.addEventListener('dragstart', e => {
+    tile.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', JSON.stringify({ source, idx }));
+  });
+  tile.addEventListener('dragend', () => tile.classList.remove('dragging'));
+  tile.addEventListener('click', () => {
+    if (source === 'bank') moveToZone('bank', idx, 'drop');
+    else moveToZone('drop', idx, 'bank');
+  });
+  return tile;
+}
+
+function moveToZone(fromZone, fromIdx, toZone) {
+  const fromArr = fromZone === 'bank' ? gameState.bankWords : gameState.dropWords;
+  const toArr = toZone === 'bank' ? gameState.bankWords : gameState.dropWords;
+  const [item] = fromArr.splice(fromIdx, 1);
+  toArr.push(item);
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('drop-zone').className = 'drop-zone';
+  renderDropZone(); renderWordBank();
+}
+
+// ══ CHECK ══
+function checkAnswer() {
+  const s = gameState.sentences[gameState.currentId];
+  if (gameState.dropWords.length !== s.tokens.length) {
+    showFeedback('wrong', '🤔 Use all the words and the full stop!');
+    return;
+  }
+  const userAnswer = gameState.dropWords.map(w => w.word).join(' ');
+  const correct = userAnswer === s.original;
+  s.attempts++; gameState.totalAttempts++;
+
+  if (correct) {
+    const stars = s.attempts === 1 ? 3 : s.attempts === 2 ? 2 : 1;
+    s.stars = stars; s.status = 'done'; s.completed = true;
+    s.timeSeconds = s.sentenceStart ? Math.floor((Date.now() - s.sentenceStart) / 1000) : 0;
+    gameState.totalCorrect++; gameState.totalStars += stars;
+
+    showFeedback('correct', `${'⭐'.repeat(stars)} Excellent! That's correct!`);
+    document.getElementById('drop-zone').classList.add('correct-zone');
+
+    const nextId = gameState.currentId + 1;
+    if (nextId < gameState.sentences.length && gameState.sentences[nextId].status === 'locked') {
+      gameState.sentences[nextId].status = 'available';
+    }
+    renderPills(); updateStats(); spawnConfetti(); spawnFloaters();
+    document.getElementById('check-btn').disabled = true;
+
+    if (gameState.sentences.every(s => s.completed)) {
+      stopTimer();
+      saveStudentResult();
+      setTimeout(showCompletion, 1800);
+    }
+  } else {
+    showFeedback('wrong', '❌ Not quite! Try rearranging the words.');
+    document.getElementById('drop-zone').classList.add('wrong-zone');
+    updateStats();
+  }
+}
+
+function showFeedback(type, msg) {
+  const fb = document.getElementById('feedback');
+  fb.className = `feedback ${type}`; fb.textContent = msg; fb.style.display = 'block';
+}
+
+function resetCurrent() {
+  const s = gameState.sentences[gameState.currentId];
+  gameState.dropWords = [];
+  gameState.bankWords = shuffle(s.tokens.map((w, i) => ({ id: i, word: w, display: w })));
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('drop-zone').className = 'drop-zone';
+  document.getElementById('check-btn').disabled = false;
+  renderDropZone(); renderWordBank();
+}
+
+function updateStats() {
+  document.getElementById('stat-correct').textContent = `✅ ${gameState.totalCorrect} correct`;
+  document.getElementById('stat-attempts').textContent = `🔄 ${gameState.totalAttempts} tries`;
+  document.getElementById('stat-stars').textContent = `⭐ ${gameState.totalStars} stars`;
+  document.getElementById('progress-bar').style.width = (gameState.totalCorrect / gameState.sentences.length * 100) + '%';
+}
+
+// ══ COMPLETION ══
+function showCompletion() {
+  document.getElementById('game-area').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('completion-banner').classList.add('show');
+  const table = document.getElementById('results-table');
+  table.innerHTML = `<tr><th>#</th><th>Sentence</th><th>Tries</th><th>Time</th><th>Stars</th></tr>`;
+  gameState.sentences.forEach(s => {
+    const tr = document.createElement('tr');
+    // Show sentence without the space before "."
+    const display = s.original.replace(' .', '.');
+    tr.innerHTML = `<td>${s.id+1}</td><td>${display}</td><td>${s.attempts}</td><td>${formatTime(s.timeSeconds)}</td><td>${'⭐'.repeat(s.stars)}</td>`;
+    table.appendChild(tr);
+  });
+  document.getElementById('final-score').textContent = `⭐ ${gameState.totalStars} / 18 stars`;
+  spawnConfetti(); spawnConfetti();
+}
+
+function restartAll() {
+  stopTimer();
+  showScreen('screen-name');
+  document.getElementById('name-input').value = '';
+  gameState = null;
+}
+
+// ══ SAVE RESULT ══
+function saveStudentResult() {
+  const results = getResults();
+  const record = {
+    name: studentName,
+    date: new Date().toLocaleString(),
+    totalStars: gameState.totalStars,
+    totalAttempts: gameState.totalAttempts,
+    totalTime: gameState.elapsedSeconds,
+    sentences: gameState.sentences.map(s => ({
+      id: s.id,
+      sentence: s.original.replace(' .', '.'),
+      attempts: s.attempts,
+      stars: s.stars,
+      timeSeconds: s.timeSeconds,
+      completed: s.completed
+    }))
+  };
+  results.push(record);
+  saveResults(results);
+}
+
+// ══ TEACHER VIEW ══
+function renderTeacherView() {
+  const results = getResults();
+  const content = document.getElementById('teacher-content');
+  const summaryGrid = document.getElementById('summary-grid');
+
+  // Summary
+  if (results.length === 0) {
+    summaryGrid.innerHTML = '';
+    content.innerHTML = `<div class="no-data"><div class="nd-emoji">📭</div><p>No student results yet.</p><small>Results appear here after students complete all sentences.</small></div>`;
+    return;
+  }
+
+  const avgStars = (results.reduce((a, r) => a + r.totalStars, 0) / results.length).toFixed(1);
+  const avgTime = Math.floor(results.reduce((a, r) => a + r.totalTime, 0) / results.length);
+  const maxStars = Math.max(...results.map(r => r.totalStars));
+  summaryGrid.innerHTML = `
+    <div class="summary-card"><div class="s-val">${results.length}</div><div class="s-label">Students</div></div>
+    <div class="summary-card"><div class="s-val">${avgStars}</div><div class="s-label">Avg Stars (/ 18)</div></div>
+    <div class="summary-card"><div class="s-val">${formatTime(avgTime)}</div><div class="s-label">Avg Time</div></div>
+    <div class="summary-card"><div class="s-val">${maxStars}</div><div class="s-label">Top Score</div></div>
+  `;
+
+  // Table
+  const sentenceLabels = SENTENCES.map((s, i) => `S${i+1}`);
+  let html = `<div style="overflow-x:auto;"><table class="teacher-table">
+    <tr>
+      <th>Student</th>
+      <th>Date</th>
+      <th>Total Stars</th>
+      <th>Total Tries</th>
+      <th>Total Time</th>
+      ${SENTENCES.map((_, i) => `<th>S${i+1} Tries</th><th>S${i+1} Time</th><th>S${i+1} Stars</th>`).join('')}
+    </tr>`;
+
+  results.slice().reverse().forEach(r => {
+    html += `<tr>
+      <td>👤 ${r.name}</td>
+      <td style="font-size:0.78rem;color:var(--muted)">${r.date}</td>
+      <td>⭐ ${r.totalStars} / 18</td>
+      <td>${r.totalAttempts}</td>
+      <td>${formatTime(r.totalTime)}</td>
+      ${r.sentences.map(s => `
+        <td>${s.attempts}</td>
+        <td>${formatTime(s.timeSeconds)}</td>
+        <td>${s.completed ? '⭐'.repeat(s.stars) : '<span class="badge-pending">Incomplete</span>'}</td>
+      `).join('')}
+    </tr>`;
+  });
+
+  html += `</table></div>`;
+  content.innerHTML = html;
+}
+
+function clearResults() {
+  if (confirm('Clear ALL student results? This cannot be undone.')) {
+    saveResults([]);
+    renderTeacherView();
+  }
+}
+
+// ══ UTILS ══
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function spawnFloaters() {
+  const emojis = ['🦋','⭐','✨','🌸','🎉','🐛'];
+  for (let i = 0; i < 6; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'floater';
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      el.style.left = Math.random() * window.innerWidth + 'px';
+      el.style.top = (window.innerHeight * 0.6) + 'px';
+      el.style.animationDuration = (2 + Math.random()) + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }, i * 150);
+  }
+}
+
+function spawnConfetti() {
+  const colors = ['#ff7043','#42a5f5','#ffca28','#66bb6a','#ab47bc','#ec407a'];
+  for (let i = 0; i < 40; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-particle';
+      el.style.left = Math.random() * window.innerWidth + 'px';
+      el.style.top = '-20px';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animationDuration = (2 + Math.random() * 2) + 's';
+      el.style.animationDelay = (Math.random() * 0.5) + 's';
+      el.style.width = (8 + Math.random() * 8) + 'px';
+      el.style.height = (8 + Math.random() * 8) + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }, i * 40);
+  }
+}
+</script>
+</body>
+</html>
